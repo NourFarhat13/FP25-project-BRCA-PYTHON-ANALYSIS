@@ -1,0 +1,392 @@
+---
+title: "Breast Cancer Survival Analysis"
+author: "Nour Farhat"
+format:
+  html:
+    code-fold: true
+---
+
+## 1. Introduction
+
+This report analyses a breast cancer dataset from The Cancer Genome Atlas (TCGA).
+The data originally contains clinical information and protein expression levels
+for 334 patients (321 after cleaning).
+
+**Research question:**
+Which clinical and biomarker factors are associated with patient survival
+(Alive vs Dead) in breast cancer patients?
+
+**Sub-questions:**
+
+1. How does tumour stage relate to survival rate?
+2. Do protein expression levels differ between survivors and non-survivors?
+3. Does surgery type influence patient outcomes?
+
+**Dataset variables:**
+
+| Type        | Columns                                                       |
+|-------------|---------------------------------------------------------------|
+| Numeric     | age, protein1, protein2, protein3, protein4                   |
+| Categorical | gender, tumour_stage, histology, er/pr/her2 status, surgery_type |
+| Target      | patient_status (Alive / Dead)                                 |
+
+## 2. Data Loading
+
+We load the pre-processed dataset (`data_full.csv`, produced by `process_data.py`)
+and import our reusable analysis functions from `functions.py`.
+
+```{python}
+import pandas as pd
+from functions import (
+    validate_dataframe,
+    helper,
+    analyze,
+    visualize_survival_by,
+    visualize_proteins,
+    visualize_age,
+    run_kmeans,
+)
+
+# Load cleaned dataset 
+df = pd.read_csv("data_full.csv")
+print(f"Dataset: {df.shape[0]} rows, {df.shape[1]} columns")
+```
+
+## 3. Data Overview
+
+```{python}
+# Column names and data types
+print(df.dtypes)
+```
+
+```{python}
+# First few rows
+df.head()
+```
+
+```{python}
+# Missing values summary
+missing = df.isnull().sum()
+missing[missing > 0]
+```
+
+The only remaining missing values are in `date_of_last_visit`.
+We intentionally kept these as NaN because imputing dates would be misleading --
+these patients simply lack follow-up data.
+
+## 4. Exploratory Data Analysis
+
+### 4.1 Descriptive Statistics by Survival Status
+
+```{python}
+# Grouped summary statistics for all numeric columns
+summary = analyze(df, group_col="patient_status")
+summary
+```
+
+At first glance, the group means are strikingly similar: mean age is ~59
+for both Alive and Dead patients, and mean protein levels differ only in
+the second or third decimal place. This suggests that none of these numeric
+variables alone will strongly separate the two groups -- we investigate
+further below.
+
+### 4.2 Survival by Tumour Stage
+
+```{python}
+visualize_survival_by(df, "tumour_stage")
+```
+
+```{python}
+# Q1: How does tumour stage relate to survival rate?
+stage_survival = pd.crosstab(df["tumour_stage"], df["patient_status"])
+stage_survival["total"] = stage_survival.sum(axis=1)
+stage_survival["death_rate_%"] = round(stage_survival["Dead"] / stage_survival["total"] * 100, 1)
+print("Survival by tumour stage:")
+print(stage_survival[["Alive", "Dead", "total", "death_rate_%"]])
+```
+
+**Answer to sub-question 1:**
+There is a mild upward trend in death rate with increasing tumour stage
+(Stage I is lowest, Stage III is highest). However, the differences are
+modest, and the small sample sizes per stage limit what we can conclude.
+Tumour stage shows a weak association with survival in this dataset.
+
+### 4.3 Survival by Surgery Type
+
+```{python}
+visualize_survival_by(df, "surgery_type")
+```
+
+```{python}
+# Q3: Does surgery type influence patient outcomes?
+surgery_survival = pd.crosstab(df["surgery_type"], df["patient_status"])
+surgery_survival["total"] = surgery_survival.sum(axis=1)
+surgery_survival["death_rate_%"] = round(surgery_survival["Dead"] / surgery_survival["total"] * 100, 1)
+print("Survival by surgery type:")
+print(surgery_survival[["Alive", "Dead", "total", "death_rate_%"]])
+```
+
+**Answer to sub-question 3:**
+Surgery types show some variation in death rates. However, this does not mean
+one surgery *causes* better outcomes -- patients receiving different surgeries
+likely differ in tumour severity, which confounds the comparison.
+
+### 4.4 Protein Expression Levels by Survival
+
+```{python}
+visualize_proteins(df)
+```
+
+```{python}
+# Q2: Do protein expression levels differ between survivors and non-survivors?
+protein_cols = ["protein1", "protein2", "protein3", "protein4"]
+protein_comparison = df.groupby("patient_status")[protein_cols].agg(["mean", "median"]).round(4)
+print("Protein levels by survival status (mean and median):")
+print(protein_comparison)
+```
+
+**Answer to sub-question 2:**
+The mean and median protein levels are quite similar between Alive and Dead
+patients across all four proteins. The boxplots confirm substantial overlap
+between the two groups. This indicates that individual protein expression
+levels do not strongly differentiate survivors from non-survivors in this dataset.
+
+### 4.5 Age Distribution by Survival
+
+```{python}
+visualize_age(df)
+```
+
+```{python}
+# Age comparison by survival status
+age_comparison = df.groupby("patient_status")["age"].agg(["mean", "median", "std"]).round(1)
+print("Age by survival status:")
+print(age_comparison)
+```
+
+The age distributions for Alive and Dead patients are very similar
+(nearly identical means and medians). Age does not appear to be a
+distinguishing factor for survival in this dataset.
+
+## 5. Feature Engineering
+
+For the K-Means clustering below, we need to prepare and scale our numeric
+features so that no single variable dominates the distance calculation.
+
+- **Numeric columns** used: age, protein1, protein2, protein3, protein4.
+- **Scaling**: we use `StandardScaler` to centre each feature at mean 0
+  and scale to unit variance.  This is important because age (range ~29--90)
+  and protein values (range ~-2 to 3) are on very different scales.
+
+Assumption: we only cluster on numeric features.  Categorical variables
+(tumour stage, surgery type) are excluded because K-Means uses Euclidean
+distance, which is not meaningful for categories.
+
+```{python}
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Select numeric features for clustering
+feature_cols = ["age", "protein1", "protein2", "protein3", "protein4"]
+df_cluster = df[feature_cols].dropna().copy()
+
+# Scale features so each has mean=0 and std=1
+scaler = StandardScaler()
+scaled_values = scaler.fit_transform(df_cluster)
+df_scaled = pd.DataFrame(scaled_values, columns=feature_cols, index=df_cluster.index)
+
+print(f"Prepared {len(df_scaled)} patients with {len(feature_cols)} scaled features")
+print(f"\nScaled feature summary (should be ~mean 0, std 1):")
+print(df_scaled.describe().loc[["mean", "std"]].round(2))
+```
+
+## 6. Simple Machine Learning Extension -- K-Means Clustering
+
+**Important note:** This section is secondary to the exploratory analysis above.
+We use K-Means clustering to explore whether patients naturally group into
+distinct profiles based on their protein expression and age.
+This is **exploratory only**.
+
+K-Means is an unsupervised method -- it finds groups in the data without
+knowing the survival labels.  After clustering, we compare the clusters
+to actual survival status to see if the grouping is clinically meaningful.
+
+### 6.1 Running K-Means
+
+```{python}
+# Run K-Means with 2 clusters (matching the two survival groups)
+labels, kmeans_model = run_kmeans(df_scaled, n_clusters=2)
+
+# Add cluster labels and actual survival status to the scaled data
+df_scaled["cluster"] = labels
+df_scaled["patient_status"] = df.loc[df_scaled.index, "patient_status"].values
+
+print(f"Cluster sizes:\n{df_scaled['cluster'].value_counts().sort_index()}")
+```
+
+### 6.2 Scatter Plot -- Clusters in Feature Space
+
+We plot two protein features against each other, colouring points by their
+assigned cluster.  The centroids (cluster centres) are marked with an X.
+
+```{python}
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# --- Left: coloured by cluster ---
+for cluster_id in sorted(df_scaled["cluster"].unique()):
+    mask = df_scaled["cluster"] == cluster_id
+    axes[0].scatter(
+        df_scaled.loc[mask, "protein1"],
+        df_scaled.loc[mask, "protein2"],
+        label=f"Cluster {cluster_id}",
+        alpha=0.6,
+        s=40,
+    )
+
+# Plot centroids
+centroids = kmeans_model.cluster_centers_
+# protein1 is index 1, protein2 is index 2 in feature_cols
+axes[0].scatter(
+    centroids[:, 1], centroids[:, 2],
+    marker="X", s=200, c="black", label="Centroids",
+)
+axes[0].set_xlabel("Protein1 (scaled)")
+axes[0].set_ylabel("Protein2 (scaled)")
+axes[0].set_title("K-Means Clusters")
+axes[0].legend()
+
+# --- Right: coloured by actual survival status ---
+for status in sorted(df_scaled["patient_status"].unique()):
+    mask = df_scaled["patient_status"] == status
+    axes[1].scatter(
+        df_scaled.loc[mask, "protein1"],
+        df_scaled.loc[mask, "protein2"],
+        label=status,
+        alpha=0.6,
+        s=40,
+    )
+axes[1].set_xlabel("Protein1 (scaled)")
+axes[1].set_ylabel("Protein2 (scaled)")
+axes[1].set_title("Actual Survival Status")
+axes[1].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+The left plot shows the two clusters found by K-Means.
+The right plot shows the same patients coloured by their actual survival status.
+Comparing these side-by-side reveals whether the algorithm's grouping
+aligns with real outcomes.
+
+### 6.3 Pair Plot -- All Features by Cluster
+
+This pair plot shows every combination of features, coloured by cluster.
+The diagonal shows the distribution of each feature within each cluster.
+
+```{python}
+# Pair plot coloured by cluster assignment
+plot_df = df_scaled[feature_cols + ["cluster"]].copy()
+plot_df["cluster"] = plot_df["cluster"].map({0: "Cluster 0", 1: "Cluster 1"})
+
+pair_grid = sns.pairplot(
+    plot_df,
+    hue="cluster",
+    diag_kind="kde",
+    plot_kws={"alpha": 0.5, "s": 30},
+    height=2.2,
+)
+pair_grid.figure.suptitle("Pair Plot of Features by K-Means Cluster", y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+### 6.4 Cluster vs Survival -- Cross-Tabulation
+
+We check how well the unsupervised clusters match the actual survival labels.
+
+```{python}
+# Cross-tabulation: cluster vs actual survival
+crosstab = pd.crosstab(
+    df_scaled["cluster"],
+    df_scaled["patient_status"],
+    margins=True,
+)
+print("Cluster vs Actual Survival Status:")
+print(crosstab)
+
+# Compute death rate per cluster to quantify alignment
+print("\nDeath rate per cluster:")
+for cluster_id in sorted(df_scaled["cluster"].unique()):
+    mask = df_scaled["cluster"] == cluster_id
+    n_total = mask.sum()
+    n_dead = (df_scaled.loc[mask, "patient_status"] == "Dead").sum()
+    rate = round(n_dead / n_total * 100, 1)
+    print(f"  Cluster {cluster_id}: {n_dead}/{n_total} = {rate}% Dead")
+
+# Compute overall rate from data
+n_dead_all = (df_scaled["patient_status"] == "Dead").sum()
+n_total_all = len(df_scaled)
+overall_rate = round(n_dead_all / n_total_all * 100, 1)
+print(f"  Overall:    {n_dead_all}/{n_total_all} = {overall_rate}% Dead")
+```
+
+### Interpretation
+
+The death rates are nearly identical across both clusters
+(close to the overall rate of ~20%). This tells us that the clusters
+found by K-Means **do not align with survival status**. The algorithm
+grouped patients by their protein expression and age profiles, but
+those groupings do not correspond to who survives and who does not.
+
+Looking at the pair plot, **protein2 appears to be the main driver**
+of the cluster separation (its KDE curves on the diagonal barely overlap
+between Cluster 0 and Cluster 1, while other features overlap heavily).
+So K-Means found a real pattern in protein2 expression -- but that
+pattern is unrelated to survival.
+
+This is an honest and meaningful result: it suggests that survival
+depends on factors beyond the five numeric variables we used
+(e.g., treatment decisions, tumour genetics, comorbidities).
+
+- K-Means finds groups based on **protein expression and age patterns**,
+  not survival labels. Any alignment with survival would be emergent.
+- In this case, the clusters do **not** separate survivors from non-survivors,
+  confirming that these features alone are insufficient to predict outcomes.
+- **This is not a diagnostic tool.** It is an exploratory exercise to
+  practise unsupervised learning within a programming course.
+
+## 7. Limitations
+
+- **Small sample size** (321 patients after cleaning) limits statistical power.
+- **Observational data** -- we cannot make causal claims about what causes
+  survival or death.
+- **K-Means assumes spherical clusters** -- the true grouping in the data
+  may not be spherical, which could affect cluster quality.
+- **Choice of k=2** -- we chose 2 clusters to match the binary outcome,
+  but the optimal number of clusters may differ.
+- **Only numeric features used** -- categorical variables like histology
+  and surgery type were excluded from clustering.
+- **No external validation** -- results are specific to this dataset.
+
+## 8. Conclusion
+
+This project loaded, cleaned, and explored a breast cancer dataset.
+Answers to the research sub-questions:
+
+1. **Tumour stage and survival:** There is a mild upward trend in death
+   rate from Stage I to Stage III, but the differences are modest.
+   Tumour stage shows only a weak association with survival here.
+2. **Protein expression and survival:** Mean and median protein levels were
+   very similar between Alive and Dead patients for all four proteins.
+   The boxplots showed substantial overlap, indicating no strong association.
+3. **Surgery type and survival:** Some variation in death rates was observed
+   across surgery types, but this likely reflects differences in patient
+   severity rather than a causal effect of the surgery itself.
+
+The K-Means clustering confirmed these findings: unsupervised grouping
+based on protein expression and age did not separate survivors from
+non-survivors, reinforcing that survival depends on factors beyond
+the numeric variables available in this dataset.
+
