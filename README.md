@@ -14,10 +14,10 @@ Includes descriptive statistics, visualizations, and K-Means clustering.
 |--------------------|--------------------------------------------------|
 | `raw_data/BRCA.csv`| Original dataset (334 patients)                  |
 | `process_data.py`  | Loads and cleans raw data → `data_full.csv`      |
+| `data_full.csv`    | Cleaned dataset (321 patients)                   |
 | `functions.py`     | Reusable functions for analysis and visualization|
 | `test_functions.py`| Unit tests for `functions.py`                    |
 | `main_file.qmd`    | Quarto report (source)                           |
-| `main_file.html`   | Rendered report (open in browser)                |
 | `requirements.txt` | Python dependencies                              |
 
 ## How to Reproduce
