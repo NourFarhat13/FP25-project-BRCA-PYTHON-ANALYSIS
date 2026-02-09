@@ -100,7 +100,7 @@ def analyze(df, group_col="patient_status"):
 
 
 def visualize_survival_by(df, category_col, target_col="patient_status"):
-    """Grouped bar chart showing survival counts by a categorical variable.
+    """Stacked percentage bar chart showing survival proportions by category.
 
     Parameters
     ----------
@@ -113,13 +113,14 @@ def visualize_survival_by(df, category_col, target_col="patient_status"):
     """
     validate_dataframe(df, [category_col, target_col])
 
-    # Count occurrences per category and survival status
+    # Count occurrences, then convert to percentages per category
     counts = df.groupby([category_col, target_col]).size().unstack(fill_value=0)
+    percentages = counts.div(counts.sum(axis=1), axis=0) * 100
 
-    ax = counts.plot(kind="bar", figsize=(8, 5))
-    ax.set_title(f"Patient Status by {category_col.replace('_', ' ').title()}")
+    ax = percentages.plot(kind="bar", stacked=True, figsize=(8, 5))
+    ax.set_title(f"Survival Proportion by {category_col.replace('_', ' ').title()}")
     ax.set_xlabel(category_col.replace("_", " ").title())
-    ax.set_ylabel("Count")
+    ax.set_ylabel("Percentage (%)")
     ax.legend(title="Status")
     plt.xticks(rotation=0)
     plt.tight_layout()

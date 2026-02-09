@@ -1,6 +1,6 @@
 # Breast Cancer Survival Analysis
 
-Fundamentals of Programming (FP25) — project.
+Fundamentals of Programming (FP25) —  project.
 
 ## Overview
 
@@ -32,3 +32,8 @@ quarto render main_file.qmd
 
 - Python 3.10+
 - Quarto CLI
+
+## Note:
+ If quarto render has issues finding Python packages,
+adding engine: knitr to the YAML header resolves this
+(requires R with the reticulate package) 
