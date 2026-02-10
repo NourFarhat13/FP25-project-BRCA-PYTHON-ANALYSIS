@@ -6,9 +6,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Quarto rendered output
-main_file.html
-main_file.pdf
-main_file_files/
+
 
 # OS files
 .DS_Store

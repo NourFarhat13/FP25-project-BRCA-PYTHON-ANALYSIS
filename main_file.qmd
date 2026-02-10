@@ -31,7 +31,7 @@ Which clinical and biomarker factors are associated with patient survival
 ## 2. Data Loading
 
 We load the pre-processed dataset (`data_full.csv`, produced by `process_data.py`)
-and import our reusable analysis functions from `functions.py`.
+and import our analysis functions from `functions.py`.
 
 ```{python}
 #| label: load-data
@@ -88,7 +88,7 @@ summary = analyze(brca, group_col="patient_status")
 summary
 ```
 
-The group means are strikingly similar: mean age is ~59 for both groups
+The group means are very similar: mean age is ~59 for both groups
 and protein levels differ only in the second decimal place. None of these
 numeric variables alone will strongly separate the two groups.
 
