@@ -155,17 +155,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functions <span class="im">import</span> (</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    validate_dataframe,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    helper,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    analyze,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    visualize_survival_by,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    visualize_proteins,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    visualize_age,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    run_kmeans,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Load cleaned dataset (relative path)</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>brca <span class="op">=</span> pd.read_csv(<span class="st">"data_full.csv"</span>)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset: </span><span class="sc">{</span>brca<span class="sc">.</span>shape[<span class="dv">0</span>]<span class="sc">}</span><span class="ss"> rows, </span><span class="sc">{</span>brca<span class="sc">.</span>shape[<span class="dv">1</span>]<span class="sc">}</span><span class="ss"> columns"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    analyze,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    visualize_survival_by,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    visualize_proteins,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    visualize_age,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    run_kmeans,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Load cleaned dataset (relative path)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>brca <span class="op">=</span> pd.read_csv(<span class="st">"data_full.csv"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset: </span><span class="sc">{</span>brca<span class="sc">.</span>shape[<span class="dv">0</span>]<span class="sc">}</span><span class="ss"> rows, </span><span class="sc">{</span>brca<span class="sc">.</span>shape[<span class="dv">1</span>]<span class="sc">}</span><span class="ss"> columns"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Dataset: 321 rows, 16 columns</code></pre>
@@ -335,8 +334,7 @@ dtype: object</code></pre>
 <div id="cell-data-missing" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>missing <span class="op">=</span> brca.isnull().<span class="bu">sum</span>()</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>missing[missing <span class="op">&gt;</span> <span class="dv">0</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>brca.isnull().<span class="bu">sum</span>().pipe(<span class="kw">lambda</span> s: s[s <span class="op">&gt;</span> <span class="dv">0</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div id="data-missing" class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>date_of_last_visit    4
@@ -363,30 +361,38 @@ dtype: int64</code></pre>
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">age_count</th>
-<th data-quarto-table-cell-role="th">age_mean</th>
-<th data-quarto-table-cell-role="th">age_median</th>
-<th data-quarto-table-cell-role="th">age_std</th>
-<th data-quarto-table-cell-role="th">age_min</th>
-<th data-quarto-table-cell-role="th">age_max</th>
-<th data-quarto-table-cell-role="th">protein1_count</th>
-<th data-quarto-table-cell-role="th">protein1_mean</th>
-<th data-quarto-table-cell-role="th">protein1_median</th>
-<th data-quarto-table-cell-role="th">protein1_std</th>
+<th colspan="8" data-quarto-table-cell-role="th" data-halign="left">age</th>
+<th colspan="2" data-quarto-table-cell-role="th" data-halign="left">protein1</th>
 <th data-quarto-table-cell-role="th">...</th>
-<th data-quarto-table-cell-role="th">protein3_median</th>
-<th data-quarto-table-cell-role="th">protein3_std</th>
-<th data-quarto-table-cell-role="th">protein3_min</th>
-<th data-quarto-table-cell-role="th">protein3_max</th>
-<th data-quarto-table-cell-role="th">protein4_count</th>
-<th data-quarto-table-cell-role="th">protein4_mean</th>
-<th data-quarto-table-cell-role="th">protein4_median</th>
-<th data-quarto-table-cell-role="th">protein4_std</th>
-<th data-quarto-table-cell-role="th">protein4_min</th>
-<th data-quarto-table-cell-role="th">protein4_max</th>
+<th colspan="2" data-quarto-table-cell-role="th" data-halign="left">protein3</th>
+<th colspan="8" data-quarto-table-cell-role="th" data-halign="left">protein4</th>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">group</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">count</th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">std</th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">25%</th>
+<th data-quarto-table-cell-role="th">50%</th>
+<th data-quarto-table-cell-role="th">75%</th>
+<th data-quarto-table-cell-role="th">max</th>
+<th data-quarto-table-cell-role="th">count</th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">75%</th>
+<th data-quarto-table-cell-role="th">max</th>
+<th data-quarto-table-cell-role="th">count</th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">std</th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">25%</th>
+<th data-quarto-table-cell-role="th">50%</th>
+<th data-quarto-table-cell-role="th">75%</th>
+<th data-quarto-table-cell-role="th">max</th>
+</tr>
+<tr class="header">
+<th data-quarto-table-cell-role="th">patient_status</th>
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th"></th>
@@ -413,56 +419,56 @@ dtype: int64</code></pre>
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Alive</th>
-<td>255</td>
+<td>255.0</td>
 <td>58.8039</td>
-<td>58.0</td>
 <td>12.8811</td>
 <td>29.0</td>
+<td>49.00</td>
+<td>58.0</td>
+<td>66.5</td>
 <td>90.0</td>
-<td>255</td>
+<td>255.0</td>
 <td>-0.0219</td>
-<td>0.0056</td>
-<td>0.5595</td>
 <td>...</td>
-<td>-0.1772</td>
-<td>0.5926</td>
-<td>-1.6274</td>
+<td>0.2144</td>
 <td>2.1934</td>
-<td>255</td>
+<td>255.0</td>
 <td>-0.0164</td>
-<td>0.0108</td>
 <td>0.6207</td>
 <td>-2.0255</td>
+<td>-0.3963</td>
+<td>0.0108</td>
+<td>0.4142</td>
 <td>1.2237</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Dead</th>
-<td>66</td>
+<td>66.0</td>
 <td>59.1515</td>
-<td>58.5</td>
 <td>13.2133</td>
 <td>29.0</td>
+<td>48.25</td>
+<td>58.5</td>
+<td>68.0</td>
 <td>88.0</td>
-<td>66</td>
+<td>66.0</td>
 <td>-0.0441</td>
-<td>0.0264</td>
-<td>0.4977</td>
 <td>...</td>
-<td>-0.1739</td>
-<td>0.5728</td>
-<td>-1.0771</td>
+<td>0.4129</td>
 <td>1.7019</td>
-<td>66</td>
+<td>66.0</td>
 <td>0.1061</td>
-<td>0.1866</td>
 <td>0.6245</td>
 <td>-1.8993</td>
+<td>-0.2286</td>
+<td>0.1866</td>
+<td>0.5166</td>
 <td>1.6299</td>
 </tr>
 </tbody>
 </table>
 
-<p>2 rows × 30 columns</p>
+<p>2 rows × 40 columns</p>
 </div>
 </div>
 </div>
@@ -476,7 +482,7 @@ dtype: int64</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>visualize_survival_by(brca, <span class="st">"tumour_stage"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-display">
-<div id="fig-tumour-stage" class="quarto-float quarto-figure quarto-figure-center anchored" height="470" width="758">
+<div id="fig-tumour-stage" class="quarto-float quarto-figure quarto-figure-center anchored" width="758" height="470">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-tumour-stage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="main_file_files/figure-html/fig-tumour-stage-output-1.png" id="fig-tumour-stage" width="758" height="470" class="figure-img">
@@ -498,7 +504,7 @@ Figure&nbsp;1
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>visualize_survival_by(brca, <span class="st">"surgery_type"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-display">
-<div id="fig-surgery-type" class="quarto-float quarto-figure quarto-figure-center anchored" height="470" width="758">
+<div id="fig-surgery-type" class="quarto-float quarto-figure quarto-figure-center anchored" width="758" height="470">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-surgery-type-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="main_file_files/figure-html/fig-surgery-type-output-1.png" id="fig-surgery-type" width="758" height="470" class="figure-img">
@@ -520,7 +526,7 @@ Figure&nbsp;2
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>visualize_proteins(brca)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-display">
-<div id="fig-proteins" class="quarto-float quarto-figure quarto-figure-center anchored" height="470" width="950">
+<div id="fig-proteins" class="quarto-float quarto-figure quarto-figure-center anchored" width="950" height="470">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-proteins-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="main_file_files/figure-html/fig-proteins-output-1.png" id="fig-proteins" width="950" height="470" class="figure-img">
@@ -542,7 +548,7 @@ Figure&nbsp;3
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>visualize_age(brca)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-display">
-<div id="fig-age" class="quarto-float quarto-figure quarto-figure-center anchored" height="470" width="758">
+<div id="fig-age" class="quarto-float quarto-figure quarto-figure-center anchored" width="758" height="470">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-age-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="main_file_files/figure-html/fig-age-output-1.png" id="fig-age" width="758" height="470" class="figure-img">
@@ -625,45 +631,35 @@ Name: count, dtype: int64</code></pre>
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">14</span>, <span class="dv">5</span>))</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Left: coloured by cluster</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cluster_id <span class="kw">in</span> <span class="bu">sorted</span>(brca_scaled[<span class="st">"cluster"</span>].unique()):</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> brca_scaled[<span class="st">"cluster"</span>] <span class="op">==</span> cluster_id</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].scatter(</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        brca_scaled.loc[mask, <span class="st">"protein1"</span>],</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        brca_scaled.loc[mask, <span class="st">"protein2"</span>],</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="ss">f"Cluster </span><span class="sc">{</span>cluster_id<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        alpha<span class="op">=</span><span class="fl">0.6</span>, s<span class="op">=</span><span class="dv">40</span>,</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>centroids <span class="op">=</span> kmeans_model.cluster_centers_</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].scatter(</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    centroids[:, <span class="dv">1</span>], centroids[:, <span class="dv">2</span>],</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="st">"X"</span>, s<span class="op">=</span><span class="dv">200</span>, c<span class="op">=</span><span class="st">"black"</span>, label<span class="op">=</span><span class="st">"Centroids"</span>,</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_xlabel(<span class="st">"Protein1 (scaled)"</span>)</span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"Protein2 (scaled)"</span>)</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"K-Means Clusters"</span>)</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend()</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Right: coloured by actual survival status</span></span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> status <span class="kw">in</span> <span class="bu">sorted</span>(brca_scaled[<span class="st">"patient_status"</span>].unique()):</span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> brca_scaled[<span class="st">"patient_status"</span>] <span class="op">==</span> status</span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].scatter(</span>
-<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>        brca_scaled.loc[mask, <span class="st">"protein1"</span>],</span>
-<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>        brca_scaled.loc[mask, <span class="st">"protein2"</span>],</span>
-<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>status,</span>
-<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>        alpha<span class="op">=</span><span class="fl">0.6</span>, s<span class="op">=</span><span class="dv">40</span>,</span>
-<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xlabel(<span class="st">"Protein1 (scaled)"</span>)</span>
-<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">"Protein2 (scaled)"</span>)</span>
-<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Actual Survival Status"</span>)</span>
-<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend()</span>
-<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
-<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, col, title <span class="kw">in</span> [</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">0</span>], <span class="st">"cluster"</span>, <span class="st">"K-Means Clusters"</span>),</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">1</span>], <span class="st">"patient_status"</span>, <span class="st">"Actual Survival Status"</span>),</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> val <span class="kw">in</span> <span class="bu">sorted</span>(brca_scaled[col].unique()):</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        mask <span class="op">=</span> brca_scaled[col] <span class="op">==</span> val</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        label <span class="op">=</span> <span class="ss">f"Cluster </span><span class="sc">{</span>val<span class="sc">}</span><span class="ss">"</span> <span class="cf">if</span> col <span class="op">==</span> <span class="st">"cluster"</span> <span class="cf">else</span> val</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        ax.scatter(</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>            brca_scaled.loc[mask, <span class="st">"protein1"</span>],</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>            brca_scaled.loc[mask, <span class="st">"protein2"</span>],</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>            label<span class="op">=</span>label, alpha<span class="op">=</span><span class="fl">0.6</span>, s<span class="op">=</span><span class="dv">40</span>,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    ax.set_xlabel(<span class="st">"Protein1 (scaled)"</span>)</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    ax.set_ylabel(<span class="st">"Protein2 (scaled)"</span>)</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    ax.set_title(title)</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    ax.legend()</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>centroids <span class="op">=</span> kmeans_model.cluster_centers_</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].scatter(</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    centroids[:, <span class="dv">1</span>], centroids[:, <span class="dv">2</span>],</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="st">"X"</span>, s<span class="op">=</span><span class="dv">200</span>, c<span class="op">=</span><span class="st">"black"</span>, label<span class="op">=</span><span class="st">"Centroids"</span>,</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend()</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-display">
-<div id="fig-clusters-scatter" class="quarto-float quarto-figure quarto-figure-center anchored" height="470" width="1334">
+<div id="fig-clusters-scatter" class="quarto-float quarto-figure quarto-figure-center anchored" width="1334" height="470">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-clusters-scatter-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="main_file_files/figure-html/fig-clusters-scatter-output-1.png" id="fig-clusters-scatter" width="1334" height="470" class="figure-img">
@@ -690,18 +686,8 @@ Figure&nbsp;5
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Cluster vs Actual Survival Status:"</span>)</span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(crosstab)</span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Death rate per cluster:"</span>)</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cluster_id <span class="kw">in</span> <span class="bu">sorted</span>(brca_scaled[<span class="st">"cluster"</span>].unique()):</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> brca_scaled[<span class="st">"cluster"</span>] <span class="op">==</span> cluster_id</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    n_total <span class="op">=</span> mask.<span class="bu">sum</span>()</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    n_dead <span class="op">=</span> (brca_scaled.loc[mask, <span class="st">"patient_status"</span>] <span class="op">==</span> <span class="st">"Dead"</span>).<span class="bu">sum</span>()</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    rate <span class="op">=</span> <span class="bu">round</span>(n_dead <span class="op">/</span> n_total <span class="op">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  Cluster </span><span class="sc">{</span>cluster_id<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>n_dead<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>n_total<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>rate<span class="sc">}</span><span class="ss">% Dead"</span>)</span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>n_dead_all <span class="op">=</span> (brca_scaled[<span class="st">"patient_status"</span>] <span class="op">==</span> <span class="st">"Dead"</span>).<span class="bu">sum</span>()</span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>n_total_all <span class="op">=</span> <span class="bu">len</span>(brca_scaled)</span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>overall_rate <span class="op">=</span> <span class="bu">round</span>(n_dead_all <span class="op">/</span> n_total_all <span class="op">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  Overall:    </span><span class="sc">{</span>n_dead_all<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>n_total_all<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>overall_rate<span class="sc">}</span><span class="ss">% Dead"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Death rate per cluster (row %):"</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>((pd.crosstab(brca_scaled[<span class="st">"cluster"</span>], brca_scaled[<span class="st">"patient_status"</span>], normalize<span class="op">=</span><span class="st">"index"</span>) <span class="op">*</span> <span class="dv">100</span>).<span class="bu">round</span>(<span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Cluster vs Actual Survival Status:
@@ -711,10 +697,11 @@ cluster
 1                 168    46  214
 All               255    66  321
 
-Death rate per cluster:
-  Cluster 0: 20/107 = 18.7% Dead
-  Cluster 1: 46/214 = 21.5% Dead
-  Overall:    66/321 = 20.6% Dead</code></pre>
+Death rate per cluster (row %):
+patient_status  Alive  Dead
+cluster                    
+0                81.3  18.7
+1                78.5  21.5</code></pre>
 </div>
 </div>
 <p>Death rates are nearly identical across both clusters (~20%), confirming the clusters do not separate survivors from non-survivors. K-Means grouped patients by protein expression patterns – but those patterns are unrelated to survival, suggesting it depends on factors beyond these numeric variables.</p>

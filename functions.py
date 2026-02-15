@@ -35,11 +35,10 @@ def validate_dataframe(df, required_cols):
         raise ValueError(f"Missing required columns: {missing}")
 
 
-
 # Descriptive statistics
 
 
-def helper(series):
+def describe_series(series):
     """Compute basic descriptive statistics for a numeric Series.
 
     Parameters
@@ -78,26 +77,12 @@ def analyze(df, group_col="patient_status"):
         Multi-index DataFrame with group values as rows and
         (column, statistic) pairs as columns.
     """
+   
     validate_dataframe(df, [group_col])
-
-    numeric_cols = df.select_dtypes(include="number").columns.tolist()
-
-    # Build results row by row using a loop 
-    rows = []
-    for group_name, group_df in df.groupby(group_col):
-        row = {"group": group_name}
-        for col in numeric_cols:
-            stats = helper(group_df[col])
-            for stat_name, stat_value in stats.items():
-                row[f"{col}_{stat_name}"] = stat_value
-        rows.append(row)
-
-    result = pd.DataFrame(rows).set_index("group")
-    return result
+    return df.groupby(group_col).describe().round(4)
 
 
 # Visualisations
-
 
 def visualize_survival_by(df, category_col, target_col="patient_status"):
     """Stacked percentage bar chart showing survival proportions by category.
@@ -113,9 +98,13 @@ def visualize_survival_by(df, category_col, target_col="patient_status"):
     """
     validate_dataframe(df, [category_col, target_col])
 
-    # Count occurrences, then convert to percentages per category
-    counts = df.groupby([category_col, target_col]).size().unstack(fill_value=0)
-    percentages = counts.div(counts.sum(axis=1), axis=0) * 100
+    
+    percentages = pd.crosstab(df[category_col], df[target_col], normalize="index") * 100
+
+    # Enforce stage order I → II → III for tumour_stage
+    if category_col == "tumour_stage":
+        order = ["I", "II", "III"]
+        percentages = percentages.reindex([s for s in order if s in percentages.index]).dropna(how="all")
 
     ax = percentages.plot(kind="bar", stacked=True, figsize=(8, 5))
     ax.set_title(f"Survival Proportion by {category_col.replace('_', ' ').title()}")
@@ -125,6 +114,7 @@ def visualize_survival_by(df, category_col, target_col="patient_status"):
     plt.xticks(rotation=0)
     plt.tight_layout()
     plt.show()
+
 
 
 def visualize_proteins(df, group_col="patient_status"):
@@ -173,25 +163,38 @@ def visualize_age(df, group_col="patient_status"):
     validate_dataframe(df, ["age", group_col])
 
     fig, ax = plt.subplots(figsize=(8, 5))
+    unique_groups = sorted(df[group_col].unique())
+    alphas_hist = (0.7, 0.4)
+    alphas_kde = (0.35, 0.2)
 
-    # Use density=True so both groups are normalised to the same scale.
-    # Without this, the larger group (Alive, n=255) dwarfs the smaller
-    # group (Dead, n=66) and the shapes become impossible to compare.
-    for status, group_df in df.groupby(group_col):
-        ax.hist(
-            group_df["age"].dropna(),
-            bins=15,
-            alpha=0.5,
-            label=status,
-            density=True,
+    # Use fixed colors for patient_status; otherwise a palette by index (no None).
+    if group_col == "patient_status":
+        palette = {"Alive": "steelblue", "Dead": "coral"}
+    else:
+        default_colors = list(sns.color_palette("husl", n_colors=max(len(unique_groups), 2)))
+        palette = {g: default_colors[i] for i, g in enumerate(unique_groups)}
+
+    for i, group in enumerate(unique_groups):
+        subset = df[df[group_col] == group]
+        alpha_h = alphas_hist[i] if i < len(alphas_hist) else 0.5
+        alpha_k = alphas_kde[i] if i < len(alphas_kde) else 0.25
+        color = palette.get(group)
+        sns.histplot(
+            data=subset, x="age", stat="density", bins=15,
+            alpha=alpha_h, ax=ax, label=group, color=color,
+        )
+        sns.kdeplot(
+            data=subset, x="age", ax=ax, color=color, fill=True,
+            alpha=alpha_k, linewidth=2, legend=False,
         )
 
-    ax.set_title("Age Distribution by Patient Status")
+    ax.set_title(f"Age Distribution by {group_col.replace('_', ' ').title()}")
     ax.set_xlabel("Age")
     ax.set_ylabel("Density")
-    ax.legend(title="Status")
+    ax.legend(title=group_col.replace("_", " ").title())
     plt.tight_layout()
     plt.show()
+
 
 
 # Clustering

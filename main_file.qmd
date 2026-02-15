@@ -39,7 +39,6 @@ and import our analysis functions from `functions.py`.
 import pandas as pd
 from functions import (
     validate_dataframe,
-    helper,
     analyze,
     visualize_survival_by,
     visualize_proteins,
@@ -69,8 +68,8 @@ brca.head()
 ```{python}
 #| label: data-missing
 
-missing = brca.isnull().sum()
-missing[missing > 0]
+brca.isnull().sum().pipe(lambda s: s[s > 0])
+
 ```
 
 The only remaining missing values are in `date_of_last_visit`.
@@ -166,6 +165,7 @@ brca_scaled = pd.DataFrame(scaled_values, columns=feature_cols, index=brca_clust
 print(f"Prepared {len(brca_scaled)} patients with {len(feature_cols)} scaled features")
 print(f"\nScaled feature summary (should be ~mean 0, std 1):")
 print(brca_scaled.describe().loc[["mean", "std"]].round(2))
+
 ```
 
 ## 6. Simple Machine Learning Extension -- K-Means Clustering
@@ -186,6 +186,7 @@ brca_scaled["cluster"] = labels
 brca_scaled["patient_status"] = brca.loc[brca_scaled.index, "patient_status"].values
 
 print(f"Cluster sizes:\n{brca_scaled['cluster'].value_counts().sort_index()}")
+
 ```
 
 ### 6.2 Clusters vs Actual Survival
@@ -198,39 +199,29 @@ survival status (right).
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-# Left: coloured by cluster
-for cluster_id in sorted(brca_scaled["cluster"].unique()):
-    mask = brca_scaled["cluster"] == cluster_id
-    axes[0].scatter(
-        brca_scaled.loc[mask, "protein1"],
-        brca_scaled.loc[mask, "protein2"],
-        label=f"Cluster {cluster_id}",
-        alpha=0.6, s=40,
-    )
+for ax, col, title in [
+    (axes[0], "cluster", "K-Means Clusters"),
+    (axes[1], "patient_status", "Actual Survival Status"),
+]:
+    for val in sorted(brca_scaled[col].unique()):
+        mask = brca_scaled[col] == val
+        label = f"Cluster {val}" if col == "cluster" else val
+        ax.scatter(
+            brca_scaled.loc[mask, "protein1"],
+            brca_scaled.loc[mask, "protein2"],
+            label=label, alpha=0.6, s=40,
+        )
+    ax.set_xlabel("Protein1 (scaled)")
+    ax.set_ylabel("Protein2 (scaled)")
+    ax.set_title(title)
+    ax.legend()
 
 centroids = kmeans_model.cluster_centers_
 axes[0].scatter(
     centroids[:, 1], centroids[:, 2],
     marker="X", s=200, c="black", label="Centroids",
 )
-axes[0].set_xlabel("Protein1 (scaled)")
-axes[0].set_ylabel("Protein2 (scaled)")
-axes[0].set_title("K-Means Clusters")
 axes[0].legend()
-
-# Right: coloured by actual survival status
-for status in sorted(brca_scaled["patient_status"].unique()):
-    mask = brca_scaled["patient_status"] == status
-    axes[1].scatter(
-        brca_scaled.loc[mask, "protein1"],
-        brca_scaled.loc[mask, "protein2"],
-        label=status,
-        alpha=0.6, s=40,
-    )
-axes[1].set_xlabel("Protein1 (scaled)")
-axes[1].set_ylabel("Protein2 (scaled)")
-axes[1].set_title("Actual Survival Status")
-axes[1].legend()
 
 plt.tight_layout()
 plt.show()
@@ -253,18 +244,8 @@ crosstab = pd.crosstab(
 print("Cluster vs Actual Survival Status:")
 print(crosstab)
 
-print("\nDeath rate per cluster:")
-for cluster_id in sorted(brca_scaled["cluster"].unique()):
-    mask = brca_scaled["cluster"] == cluster_id
-    n_total = mask.sum()
-    n_dead = (brca_scaled.loc[mask, "patient_status"] == "Dead").sum()
-    rate = round(n_dead / n_total * 100, 1)
-    print(f"  Cluster {cluster_id}: {n_dead}/{n_total} = {rate}% Dead")
-
-n_dead_all = (brca_scaled["patient_status"] == "Dead").sum()
-n_total_all = len(brca_scaled)
-overall_rate = round(n_dead_all / n_total_all * 100, 1)
-print(f"  Overall:    {n_dead_all}/{n_total_all} = {overall_rate}% Dead")
+print("\nDeath rate per cluster (row %):")
+print((pd.crosstab(brca_scaled["cluster"], brca_scaled["patient_status"], normalize="index") * 100).round(1))
 ```
 
 Death rates are nearly identical across both clusters (~20%), confirming
